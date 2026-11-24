@@ -1,0 +1,19 @@
+{
+  "caseId": "E2E-01",
+  "title": "Вход → поиск → карточка → корзина → оформление → заказ",
+  "relatedCases": ["ТК-А-01", "ТК-КП-01-06", "ТК-КП-02-01", "ТК-КП-02-02", "ТК-КП-02-03", "ТК-КП-02-10", "ТК-КП-03-09", "ТК-КП-03-13", "ТК-КП-03-15"],
+  "searchQuery": "Диван прямой тулон аликанте серый",
+  "searchKeywords": ["диван"],
+  "checkTopResults": 5,
+  "product": {
+    "path": "/divany-i-kresla/divan-pryamoj-tulon-seryj-variant-1/",
+    "nameContains": "Диван прямой тулон аликанте серый",
+    "variant": "Серый"
+  },
+  "quantity": 2,
+  "identifierKind": "phone",
+  "person": "individual",
+  "delivery": "pickup",
+  "pickupPoint": "Одинцово",
+  "payment": "cash"
+}

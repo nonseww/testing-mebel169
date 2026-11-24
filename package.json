@@ -1,0 +1,35 @@
+{
+  "name": "mebel169-autotests",
+  "version": "1.0.0",
+  "description": "UI-автотесты mebel169.ru: Playwright + TypeScript + Allure",
+  "scripts": {
+    "clean:results": "node -e \"for (const d of ['allure-results','test-results']) require('fs').rmSync(d,{recursive:true,force:true})\"",
+    "pretest": "npm run clean:results",
+    "test": "playwright test",
+    "test:auth": "npm run clean:results && playwright test autotest/specs/auth",
+    "test:e2e": "npm run clean:results && playwright test autotest/specs/e2e",
+    "typecheck": "tsc -p tsconfig.json",
+    "allure:generate": "allure generate allure-results -o allure-report",
+    "allure:open": "allure open allure-report",
+    "report": "npm run allure:generate && npm run allure:open",
+    "browsers:install": "playwright install firefox chromium"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@playwright/test": "1.65.1",
+    "@types/node": "26.6.6",
+    "allure": "3.33.0",
+    "allure-js-commons": "3.15.0",
+    "allure-playwright": "3.15.0",
+    "dotenv": "18.0.10",
+    "typescript": "7.0.2",
+    "winston": "3.19.0"
+  },
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  }
+}

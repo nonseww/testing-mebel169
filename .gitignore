@@ -1,0 +1,19 @@
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/
+
+# Allure
+/allure-results/
+/allure-report/
+
+# Логи
+/logs/
+
+# Локальная конфигурация с секретами
+.env
+.env.*
+!.env.example

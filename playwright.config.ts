@@ -46,6 +46,7 @@ export default defineConfig({
     baseURL: config.baseUrl,
     browserName: config.browser,
     headless: config.headless,
+    launchOptions: { slowMo: config.slowMo },
     viewport: { width: 1366, height: 900 },
     locale: 'ru-RU',
     timezoneId: 'Europe/Moscow',

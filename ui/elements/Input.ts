@@ -20,13 +20,13 @@ export class Input extends BaseElement {
   }
 
   async fill(value: string): Promise<void> {
-    this.log.debug(`Ввод в «${this.name}»: ${describeValue(value, this.sensitive)}`);
+    this.log.info(`Ввод в «${this.name}»: ${describeValue(value, this.sensitive)}`);
     await this.root.fill(value);
   }
 
   /** Посимвольный ввод — для полей с маской (телефон). */
   async type(value: string): Promise<void> {
-    this.log.debug(`Посимвольный ввод в «${this.name}»: ${describeValue(value, this.sensitive)}`);
+    this.log.info(`Посимвольный ввод в «${this.name}»: ${describeValue(value, this.sensitive)}`);
     await this.root.clear();
     await this.root.pressSequentially(value);
   }

@@ -1,7 +1,8 @@
 import { test as base } from '@playwright/test';
 import { getLogger, startTestLogCapture, stopTestLogCapture, type Logger } from './logger';
-import { maskSecrets } from './secrets';
-import { firstLine } from './reporting';
+import { maskingSummary, maskSecrets } from './secrets';
+import * as allure from 'allure-js-commons';
+import { firstLine, setFailureCapture } from './reporting';
 
 /**
  * Базовые фикстуры уровня core: логгер теста и диагностика.
@@ -27,12 +28,33 @@ export const test = base.extend<CoreFixtures>({
     async ({ page: basePage, log, sensitiveSelectors }, use, testInfo) => {
       startTestLogCapture();
       log.info(`Старт теста: ${testInfo.title}`);
+      log.info(maskingSummary());
+
+      // Скриншот снимается в момент падения шага, ещё в теле теста → в Allure он в Test body.
+      let screenshotTaken = false;
+      const captureScreenshot = async (): Promise<void> => {
+        screenshotTaken = true;
+        // Сценарий мог перейти в новую вкладку — снимаем последнюю открытую
+        const page = basePage.context().pages().at(-1) ?? basePage;
+        try {
+          const screenshot = await page.screenshot({
+            mask: sensitiveSelectors.map((selector) => page.locator(selector)),
+            timeout: 10_000,
+          });
+          await allure.attachment('screenshot-on-failure', screenshot, 'image/png');
+        } catch (error) {
+          const reason = `Скриншот недоступен: ${firstLine(error)}`;
+          log.warn(reason);
+          await allure.attachment('screenshot-unavailable', reason, 'text/plain');
+        }
+      };
+      setFailureCapture(captureScreenshot);
 
       await use();
 
+      setFailureCapture(undefined);
       const failed = testInfo.status !== testInfo.expectedStatus;
       if (failed) {
-        // Сценарий мог перейти в новую вкладку — снимаем последнюю открытую
         const page = basePage.context().pages().at(-1) ?? basePage;
         const where = failurePlace(testInfo.error?.stack);
         log.error(
@@ -40,22 +62,13 @@ export const test = base.extend<CoreFixtures>({
             (where ? ` | место сбоя: ${where}` : '') +
             ` | URL: ${safeUrl(page.url())}`,
         );
-        try {
-          const screenshot = await page.screenshot({
-            mask: sensitiveSelectors.map((selector) => page.locator(selector)),
-            timeout: 10_000,
-          });
-          await testInfo.attach('screenshot-on-failure', { body: screenshot, contentType: 'image/png' });
-        } catch (error) {
-          const reason = `Скриншот недоступен: ${firstLine(error)}`;
-          log.warn(reason);
-          await testInfo.attach('screenshot-unavailable', { body: reason, contentType: 'text/plain' });
-        }
+        // Падение вне step() (например, тайм-аут теста) — снимаем здесь, в завершении теста.
+        if (!screenshotTaken) await captureScreenshot();
       } else {
         log.info(`Завершён: ${testInfo.status}`);
       }
 
-      await testInfo.attach('log', { body: stopTestLogCapture(), contentType: 'text/plain' });
+      await allure.attachment('log', stopTestLogCapture(), 'text/plain');
     },
     { auto: true },
   ],

@@ -8,10 +8,12 @@
     "test": "playwright test",
     "test:auth": "npm run clean:results && playwright test autotest/specs/auth",
     "test:e2e": "npm run clean:results && playwright test autotest/specs/e2e",
+    "test:headed": "npm run clean:results && playwright test --headed --workers=1",
     "typecheck": "tsc -p tsconfig.json",
-    "allure:generate": "allure generate allure-results -o allure-report",
+    "allure:generate": "allure generate allure-results -o allure-report --clean",
     "allure:open": "allure open allure-report",
     "report": "npm run allure:generate && npm run allure:open",
+    "test:report": "npm test; npm run report",
     "browsers:install": "playwright install firefox chromium"
   },
   "keywords": [],

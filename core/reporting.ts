@@ -8,16 +8,38 @@ import { maskSecrets } from './secrets';
  */
 const log = getLogger('step');
 
+/**
+ * Снятие диагностики при падении (скриншот). Регистрируется фикстурой на время теста.
+ * Вызывается в теле теста — поэтому вложение попадает в Test body, а не в Tear down.
+ */
+type FailureCapture = () => Promise<void>;
+let failureCapture: FailureCapture | undefined;
+let stepDepth = 0;
+
+export function setFailureCapture(capture: FailureCapture | undefined): void {
+  failureCapture = capture;
+  stepDepth = 0;
+}
+
 /** Шаг: попадает в Allure (через test.step) и в лог; при ошибке пишет место сбоя. */
 export async function step<T>(name: string, body: () => Promise<T>): Promise<T> {
   log.info(`▶ ${name}`);
+  stepDepth++;
   try {
     const result = await test.step(name, body);
     log.info(`✔ ${name}`);
     return result;
   } catch (error) {
     log.error(`✘ ${name}: ${firstLine(error)}`);
+    // Внешний шаг уже завершён (test.step вернул ошибку) — вложение пойдёт на уровень теста.
+    if (stepDepth === 1 && failureCapture) {
+      const capture = failureCapture;
+      failureCapture = undefined;
+      await capture();
+    }
     throw error;
+  } finally {
+    stepDepth--;
   }
 }
 

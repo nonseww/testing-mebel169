@@ -6,10 +6,13 @@ import { config } from './config';
  */
 const MASK = '***';
 const registered = new Set<string>();
+/** Виды зарегистрированных секретов (без значений) — для сводки в логе. */
+const registeredKinds = new Set<string>();
 
-export function registerSecret(value: string | undefined): void {
+export function registerSecret(value: string | undefined, kind = 'секрет'): void {
   if (!value || value.length < 3) return;
   registered.add(value);
+  registeredKinds.add(kind);
   const digits = value.replace(/\D/g, '');
   // Телефон может появиться в логах в другом формате: +7(900) 123-45-67 / 79001234567 / 9001234567
   if (digits.length >= 10) {
@@ -44,16 +47,30 @@ export function maskSecrets(text: string, generic = true): string {
   return result;
 }
 
-/** Значение для логов: пароль всегда скрыт, остальное проходит через maskSecrets. */
+/**
+ * Значение для логов: пароль всегда скрыт, остальное проходит через maskSecrets.
+ * Если значение было скрыто — в лог добавляется пометка, что сработало маскирование.
+ */
 export function describeValue(value: string, sensitive: boolean): string {
-  if (sensitive) return value ? MASK : '(пусто)';
-  return value ? maskSecrets(value) : '(пусто)';
+  if (!value) return '(пусто)';
+  if (sensitive) return `${MASK} [замаскировано: пароль]`;
+  const masked = maskSecrets(value);
+  return masked === value ? value : `${masked} [замаскировано]`;
+}
+
+/** Сводка для лога: что маскируется (только виды данных, без самих значений). */
+export function maskingSummary(): string {
+  const kinds = [...registeredKinds].join(', ') || 'нет';
+  return (
+    `Маскирование включено. Значения из окружения (.env): ${kinds}; ` +
+    'шаблоны: email, телефоны, токены, cookies. В логах и отчёте они заменяются на «***».'
+  );
 }
 
 // Секреты из конфигурации регистрируются сразу при загрузке модуля.
-registerSecret(config.account?.password);
-registerSecret(config.account?.phone);
-registerSecret(config.account?.email);
-registerSecret(config.account?.displayName);
-registerSecret(config.checkoutContacts.phone);
-registerSecret(config.checkoutContacts.email);
+registerSecret(config.account?.password, 'пароль');
+registerSecret(config.account?.phone, 'телефон');
+registerSecret(config.account?.email, 'email');
+registerSecret(config.account?.displayName, 'имя пользователя');
+registerSecret(config.checkoutContacts.phone, 'телефон');
+registerSecret(config.checkoutContacts.email, 'email');

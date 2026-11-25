@@ -72,6 +72,8 @@ export const config = Object.freeze({
   lkUrl: trimSlash(str('LK_URL', 'https://lk.169.ru')),
   browser: oneOf('BROWSER', BROWSERS, 'firefox'),
   headless: bool('HEADLESS', true),
+  /** Замедление каждого действия браузера, мс (для показа прогона в видимом браузере). */
+  slowMo: int('SLOW_MO_MS', 0),
   workers: int('WORKERS', 2),
   timeouts: Object.freeze({
     /** Тайм-аут одного действия (клик, ввод). */

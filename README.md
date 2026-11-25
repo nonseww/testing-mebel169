@@ -10,9 +10,21 @@ npm run browsers:install          # firefox и chromium для Playwright
 cp .env.example .env              # заполнить TEST_USER_* (см. ниже)
 npm test                          # все проверки
 npm run report                    # собрать и открыть Allure-отчёт
+npm run test:report               # прогон + отчёт (отчёт откроется, даже если есть упавшие тесты)
 ```
 
 Отдельно: `npm run test:auth`, `npm run test:e2e`. Проверка типов: `npm run typecheck`.
+
+**Запуск с видимым браузером:**
+
+```bash
+npm run test:headed                                    # все тесты, видимый браузер, по одному
+npm run test:headed -- autotest/specs/e2e              # только сквозной сценарий
+SLOW_MO_MS=500 npm run test:headed                     # с замедлением действий, чтобы было видно шаги
+LOG_LEVEL=debug npm run test:headed -- autotest/specs/auth   # подробный лог
+```
+
+Описание страниц и локаторов элементов находится в [docs/PAGES.md](docs/PAGES.md).
 
 ## Версии инструментов
 
@@ -40,7 +52,7 @@ core/                       конфигурация, запуск, логиро
   SanitizingReporter.ts     после прогона маскирует секреты в allure-results / test-results
   data.ts                   загрузка JSON-данных, подстановка {{account.*}} из окружения
   dto.ts, utils.ts          DTO и разбор цен/количеств
-ui/                         Page Object: локаторы и детали взаимодействия
+ui/                         Page Object: локаторы и детали взаимодействия (описание: docs/PAGES.md)
   elements/                 BaseElement, Input, Choice (радио/чекбокс со стилизованной меткой)
   components/               Header, ProductTile, AddedToCartModal, CartItem, OrderSummaryBlock, ConfirmDialog
   pages/                    LoginPage, AccountPage, HomePage, SearchResultsPage, ProductPage,
@@ -131,9 +143,9 @@ autotest/                   сценарии, параметризация, пр
 
 - Логи пишутся в консоль и в `logs/autotest.log`. Лог каждого теста прикладывается к нему в Allure.
 - В Allure есть: название с ID кейса, статус, метки (`case_id`, epic/feature/story, severity, теги связанных ТК), шаги, параметры набора, окружение.
-- При падении прикладываются скриншот с закрашенными полями ввода (или причина, почему его нет) и место сбоя.
+- При падении прикладываются скриншот с закрашенными полями ввода (или причина, почему его нет) и место сбоя. Скриншот и лог лежат в теле теста (Test body), после шагов.
 - **Защита данных:**
   - пароли передаются в Allure только как `***`;
-  - логи маскируют email, телефоны, токены и cookies;
+  - логи маскируют email, телефоны, токены и cookies. В начале каждого теста в лог пишется строка «Маскирование включено…» со списком того, что скрывается (без самих значений). Каждый ввод в поле логируется с пометкой, например `Ввод в «Пароль»: *** [замаскировано: пароль]`;
   - после прогона `SanitizingReporter` вычищает зарегистрированные секреты из всех текстовых результатов, включая снимок страницы `error-context.md`;
   - trace и video выключены, потому что в них попали бы введённые данные.
